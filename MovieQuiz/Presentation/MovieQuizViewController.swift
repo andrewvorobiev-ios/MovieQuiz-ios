@@ -10,7 +10,6 @@ final class MovieQuizViewController: UIViewController {
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
     
-    
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
@@ -53,7 +52,6 @@ final class MovieQuizViewController: UIViewController {
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть ещё раз")
-            
             show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
@@ -72,14 +70,10 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.borderWidth = 8 // 2
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
-        
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionOrResult()
-            
         }
     }
-    
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
@@ -89,8 +83,6 @@ final class MovieQuizViewController: UIViewController {
         return questionStep
     }
     
-    
-    
     private func show(quiz step: QuizStepViewModel) {
         clearAnswerHiglight()
         setAnswerButtons(enabled: true)
@@ -98,7 +90,6 @@ final class MovieQuizViewController: UIViewController {
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
     }
-    
     
     private func show(quiz result: QuizResultsViewModel) {
         let alert = UIAlertController(
@@ -116,13 +107,11 @@ final class MovieQuizViewController: UIViewController {
             let viewModel = self.convert(model: firstQuestion)
             self.show(quiz: viewModel)
         }
-        
         alert.addAction(action)
         self.present(alert, animated: true, completion: nil)
-        // попробуйте написать код создания и показа алерта с результатами
     }
     
-    private func clearAnswerHiglight(){
+    private func clearAnswerHighlight(){
         imageView.layer.borderWidth = 0
         imageView.layer.borderColor = UIColor.clear.cgColor
     }
@@ -169,7 +158,6 @@ final class MovieQuizViewController: UIViewController {
             image: "Tesla",
             text: "Рейтинг этого фильма больше чем 6?",
             correctAnswer: true),
-        
         QuizQuestion(
             image: "Vivarium",
             text: "Рейтинг этого фильма больше чем 6?",
@@ -177,8 +165,6 @@ final class MovieQuizViewController: UIViewController {
     ]
     
 }
-
-
 
 /*
  Mock-данные
