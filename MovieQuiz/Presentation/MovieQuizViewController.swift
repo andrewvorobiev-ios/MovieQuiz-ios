@@ -1,7 +1,7 @@
-import Foundation
 import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
+    
     
     // MARK: - Private Properties
     private var currentQuestionIndex = 0
@@ -9,7 +9,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
-
+    private let alertPresenter = AlertPresenter()
+    private let statisticService: StatisticServiceProtocol = StatisticService()
     
     // MARK: - IBOutlets
     @IBOutlet private weak var imageView: UIImageView!
@@ -24,6 +25,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         super.viewDidLoad()
         questionFactory = QuestionFactory(delegate: self)
         questionFactory?.requestNextQuestion()
+        
         
     }
     
@@ -41,7 +43,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         }
     }
     
-   
+    
     // MARK: - IBActions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else { return }
@@ -56,17 +58,26 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     // MARK: - Private Methods
     private func showNextQuestionOrResult() {
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = "Ваш результат: \(correctAnswers)/10"
+            let gameResult = GameResult(
+                correct: correctAnswers,
+                total: questionsAmount,
+                date: Date()
+            )
+            
+            statisticService.store(gameResult)
+            
+            let text = makeResultsMessage()
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
                 text: text,
-                buttonText: "Сыграть ещё раз")
+                buttonText: "Сыграть ещё раз"
+            )
             show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
-            
         }
+        
     }
     
     private func showAnswerResult(isCorrect: Bool) {
@@ -93,21 +104,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     }
     
     private func show(quiz result: QuizResultsViewModel) {
-        let alert = UIAlertController(
+        let model = AlertModel(
             title: result.title,
             message: result.text,
-            preferredStyle: .alert
-        )
-        
-        let action = UIAlertAction(title: result.buttonText, style: .default){ [weak self] _ in
+            buttonText: result.buttonText
+        ) { [weak self] in
             guard let self = self else { return }
-            self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            self.questionFactory?.requestNextQuestion()
-            
+            self.restartGame()
         }
-        alert.addAction(action)
-        present(alert, animated: true)
+        alertPresenter.show(in: self, model: model)
+        
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
@@ -128,5 +134,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         noButton.isEnabled = enabled
     }
     
+    private func restartGame() {
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.resetQuestions()
+        questionFactory?.requestNextQuestion()
+        
+    }
+    
+    private func makeResultsMessage() -> String {
+        """
+        Ваш результат: \(correctAnswers)/\(questionsAmount)
+        Количество сыгранных квизов: \(statisticService.gamesCount)
+        Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date.dateTimeString))
+        Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+        """
+    }
     
 }

@@ -6,14 +6,13 @@
 //
 
 import Foundation
-import UIKit
 
-class QuestionFactory: QuestionFactoryProtocol {
-   
+final class QuestionFactory: QuestionFactoryProtocol {
+    
     weak var delegate: QuestionFactoryDelegate?
     
     
-    private let questions: [QuizQuestion] = [
+    private let allQuestions: [QuizQuestion] = [
         QuizQuestion(
             image: "The Godfather",
             text: "Рейтинг этого фильма больше чем 6?",
@@ -56,19 +55,31 @@ class QuestionFactory: QuestionFactoryProtocol {
             correctAnswer: true),
     ]
     
+    
+    private var shuffledQuestions: [QuizQuestion] = []
+    private var currentQuestionIndex = 0
+    
+    
     init(delegate: QuestionFactoryDelegate) {
-           self.delegate = delegate
-       }
-   
+        self.delegate = delegate
+        self.shuffledQuestions = questions.shuffled()
+    }
+    
     
     func requestNextQuestion() {
-        guard let index = (0..<questions.count).randomElement() else {
+        guard currentQuestionIndex < shuffledQuestions.count else {
             delegate?.didReceiveNextQuestion(question: nil)
             return
         }
-
-        let question = questions[safe: index]
+        
+        let question = shuffledQuestions[currentQuestionIndex]
+        currentQuestionIndex += 1
         delegate?.didReceiveNextQuestion(question: question)
+    }
+    
+    func resetQuestions() {
+        shuffledQuestions = questions.shuffled()
+        currentQuestionIndex = 0
     }
 }
 
