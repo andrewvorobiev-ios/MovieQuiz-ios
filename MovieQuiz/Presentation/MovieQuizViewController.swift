@@ -40,6 +40,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         currentQuestion = question
         let viewModel = convert(model: question)
 
+        DispatchQueue.main.async {
+            self.show(quiz: viewModel)
+        }
     }
 
     
