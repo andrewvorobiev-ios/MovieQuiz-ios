@@ -2,7 +2,7 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
-    
+
     // MARK: - Private Properties
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
@@ -11,7 +11,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestion: QuizQuestion?
     private let alertPresenter = AlertPresenter()
     private let statisticService: StatisticServiceProtocol = StatisticService()
-    
+
     // MARK: - IBOutlets
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
@@ -30,9 +30,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showLoadingIndicator()
         questionFactory?.loadData()
     }
-    
+
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
+        hideLoadingIndicator()
         guard let question else {
             return
         }
@@ -45,7 +46,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
 
-    
+
     // MARK: - IBActions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else { return }
@@ -55,8 +56,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         guard let currentQuestion = currentQuestion else { return }
         showAnswerResult(isCorrect: !currentQuestion.correctAnswer)
     }
-    
-    
+
+
     // MARK: - Private Methods
     private func showNextQuestionOrResult() {
         if currentQuestionIndex == questionsAmount - 1 {
@@ -65,9 +66,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 total: questionsAmount,
                 date: Date()
             )
-            
+
             statisticService.store(gameResult)
-            
+
             let text = makeResultsMessage()
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
@@ -79,9 +80,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
         }
-        
+
     }
-    
+
     private func showAnswerResult(isCorrect: Bool) {
         setAnswerButtons(enabled: false)
         if isCorrect {
@@ -90,13 +91,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
             self.showNextQuestionOrResult()
         }
     }
-    
+
     private func show(quiz step: QuizStepViewModel) {
         clearAnswerHighlight()
         setAnswerButtons(enabled: true)
@@ -104,7 +105,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
     }
-    
+
     private func show(quiz result: QuizResultsViewModel) {
         let model = AlertModel(
             title: result.title,
@@ -115,9 +116,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.restartGame()
         }
         alertPresenter.show(in: self, model: model)
-        
+
     }
-    
+
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
@@ -125,25 +126,25 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
         )
     }
-    
+
     private func clearAnswerHighlight() {
         imageView.layer.borderWidth = 0
         imageView.layer.borderColor = UIColor.clear.cgColor
     }
-    
+
     private func setAnswerButtons(enabled: Bool) {
         yesButton.isEnabled = enabled
         noButton.isEnabled = enabled
     }
-    
+
     private func restartGame() {
         currentQuestionIndex = 0
         correctAnswers = 0
         questionFactory?.resetQuestions()
         questionFactory?.requestNextQuestion()
-        
+
     }
-    
+
     private func makeResultsMessage() -> String {
         """
         Ваш результат: \(correctAnswers)/\(questionsAmount)
@@ -168,7 +169,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Network Methods
 
     func didLoadDataFromServer() {
-        hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
 
